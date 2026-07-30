@@ -27,9 +27,9 @@ Molcas format. If the latter is provided, the density matrix to be used
 in the NBO run will be crated from the orbital file data.
 
 ```
- molcasto47 H5FILE [orbitalfile]
+ molcasto47 H5FILE [orbitalfile] [-fock] 
 ```
 
 Output is `File.47`
 
-
+Optional third flag `-fock` for writting of the Fock matrix.  

@@ -30,7 +30,7 @@ program molcasto47
 
   integer, dimension(:), allocatable :: IDSP, IDSB, label, n0nums
 
-  character*(LCHARS) :: h5file, orbfile
+  character*(LCHARS) :: h5file, orbfile, f_flag
 
   real(KREAL), dimension(:,:), allocatable :: C, n, F, S, A, P, D
 
@@ -42,7 +42,7 @@ program molcasto47
   
   real(KREAL) :: rtemp
 
-  logical :: SYM, have_orb
+  logical :: SYM, have_orb, save_fock
 
   integer, dimension(:), allocatable :: nprim, npntr, ncomps
 
@@ -53,7 +53,7 @@ program molcasto47
   ! check command line options, check if input files can be opened:
 
   if (iargc().lt.1) stop 'need at least one file name argument. aborting'
-  if (iargc().gt.2) stop 'looks like there are too many arguments. aborting'
+  if (iargc().gt.3) stop 'looks like there are too many arguments. aborting'
 
   call getarg(1,h5file)
   ios = 0
@@ -65,9 +65,14 @@ program molcasto47
     close(iuh)
   endif
 
+  save_fock = .false.
   have_orb = .false. ! flag for whether to use orbital file data
-  if (iargc().eq.2) then
+  if (iargc().ge.2) then
     call getarg(2,orbfile)
+    if (trim(orbfile) == '-fock') then
+       save_fock = .true.
+       write(out,*) 'Fock matrix will be written!'
+    else
     ios = 0
     open(iuo, file=trim(orbfile), iostat=ios)
     if (ios /= 0) then
@@ -82,7 +87,16 @@ program molcasto47
       ! note: orbital file unit iuo remains open
       have_orb = .true.
     endif ! ios
+    endif
   end if ! iargc()
+
+  if (iargc().eq.3) then
+    call getarg(3,f_flag)
+    if (trim(f_flag) == '-fock') then
+       save_fock = .true.
+       write(out,*) 'Fock matrix will be written!'
+    end if
+  endif 
 
   ! Extraction and ordering of the data from h5 file
 
@@ -610,10 +624,12 @@ program molcasto47
  write(i47,'(A)') '$DENSITY'
  write(i47,'(4E24.16)') P
  write(i47,'(A)') '$END'
-
- write(i47,'(A)') '$FOCK'
- write(i47,'(4E24.16)') F
- write(i47,'(A)') '$END'
+ 
+ if (save_fock) then 
+   write(i47,'(A)') '$FOCK'
+   write(i47,'(4E24.16)') F
+   write(i47,'(A)') '$END'
+ endif  
 
  ! For LCAMO implementation the C matrices should be 
  ! additionally desymmetrized!
